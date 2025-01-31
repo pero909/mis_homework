@@ -1,102 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:mis_homework/screens/edit_meal_screen.dart';
+import 'package:mis_homework/utils/meal.dart';
+import '../widgets/top_section.dart';
+import '../widgets/date_navigation_section.dart';
+import '../widgets/meal_cards.dart';
+import '../database/meal_database.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int totalCalories = 1700;
+  int eatenCalories = 0;
+  DateTime currentDate = DateTime.now();
+
+  final MealDatabase mealDatabase = MealDatabase(); // Initialize database
+
+  void updateTotalCalories(int newTotal) {
+    setState(() {
+      totalCalories = newTotal;
+    });
+  }
+
+  void _updateDate(DateTime newDate) {
+    setState(() {
+      currentDate = newDate;
+    });
+  }
+  void _refreshUI() {
+    setState(() {});
+  }
+  void _addMeal(String mealType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditMealScreen(
+          mealType: mealType,
+          date:
+          '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}',
+        ),
+      ),
+    ).then((result) {
+      if (result != null && result is Meal) {
+        setState(() {
+          mealDatabase.addMeal(result);
+          eatenCalories += result.calories; // Update eaten calories dynamically
+        });
+        _refreshUI();
+      }
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    final String formattedDate =
+        '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calorie Counter'),
+        title: const Text('Eatly'),
         centerTitle: true,
-        backgroundColor: Colors.purple,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Battery and Calorie Info Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.purple.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(Icons.battery_full, size: 40, color: Colors.purple),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: const [
-                      Text('Total: 2000 Calories', style: TextStyle(fontSize: 16)),
-                      Text('Eaten: 0 Calories', style: TextStyle(fontSize: 16)),
-                    ],
-                  ),
-                ],
-              ),
+            // Top Section
+            TopSection(
+              totalCalories: totalCalories,
+              eatenCalories: eatenCalories,
+              onTotalCaloriesChanged: updateTotalCalories,
             ),
+
             const SizedBox(height: 20),
-            // Current Date Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios),
-                  onPressed: () {}, // Placeholder for navigation
-                ),
-                Text(
-                  'Today, January 30',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios),
-                  onPressed: () {}, // Placeholder for navigation
-                ),
-              ],
+
+            // Date Navigation Section
+            DateNavigation(
+              currentDate: currentDate,
+              onDateChanged: _updateDate,
             ),
+
             const SizedBox(height: 20),
-            // Meal Categories Section
+
+            // Meal Cards Section
             Expanded(
-              child: ListView(
-                children: [
-                  MealCard(mealType: 'Breakfast'),
-                  MealCard(mealType: 'Lunch'),
-                  MealCard(mealType: 'Dinner'),
-                ],
+              child: ListView.builder(
+                itemCount: 3, // Number of meal types (Breakfast, Lunch, Dinner)
+                itemBuilder: (context, index) {
+                  final mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
+                  final mealType = mealTypes[index];
+
+                  return MealCard(
+                    mealType: mealType,
+                    date:
+                    '${currentDate.year}-${currentDate.month.toString().padLeft(2, '0')}-${currentDate.day.toString().padLeft(2, '0')}',
+                    mealDatabase: mealDatabase,
+                    onAddMeal: () => _addMeal(mealType),
+                    onRefresh: _refreshUI,
+                  );
+                },
               ),
-            )
+            ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Placeholder for navigation to Meal Creation Screen
-        },
-        backgroundColor: Colors.purple,
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class MealCard extends StatelessWidget {
-  final String mealType;
-
-  const MealCard({Key? key, required this.mealType}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        title: Text(mealType, style: const TextStyle(fontSize: 18)),
-        trailing: IconButton(
-          icon: const Icon(Icons.add, color: Colors.purple),
-          onPressed: () {
-            // Placeholder for adding a meal
-          },
         ),
       ),
     );

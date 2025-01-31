@@ -1,4 +1,3 @@
-# mis_homework
+This is my entry for MIS homework, a simple calorie tracking App :EATLY
+Petar Vasev 191553 .
 
-
-<iframe src="https://drive.google.com/file/d/1U44g9veyNDdIzNhIrZCIT2Ws7zEDtvdd/preview" width="640" height="480"></iframe>
